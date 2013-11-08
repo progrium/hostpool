@@ -193,6 +193,7 @@ func main() {
 						break
 					}
 					w.Write([]byte("\n"))
+					w.(http.Flusher).Flush()
 				}
 			}()
 			log.Printf("Request to create host. Slots: %v/%v\n", len(semaphore), cap(semaphore))
