@@ -183,7 +183,18 @@ func main() {
 		switch r.Method {
 		case "GET":
 			disconnected := false
-			go func() { disconnected = <-w.(http.CloseNotifier).CloseNotify() }()
+			go func() { 
+				disconnected = <-w.(http.CloseNotifier).CloseNotify() 
+			}()
+			go func() {
+				for {
+					time.Sleep(15 * time.Second)
+					if disconnected {
+						break
+					}
+					w.Write([]byte("\n"))
+				}
+			}()
 			log.Printf("Request to create host. Slots: %v/%v\n", len(semaphore), cap(semaphore))
 			semaphore <- struct{}{}
 			if disconnected {
@@ -208,6 +219,7 @@ func main() {
 				return
 			}
 			log.Println("Host created: "+ip)
+			disconnected = true // stop heartbeats
 			w.Write([]byte(ip))
 			go func() {
 				time.Sleep(time.Duration(timeout) * time.Minute)
